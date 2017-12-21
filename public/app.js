@@ -4,6 +4,38 @@ var secret = '';
 var step = 30;
 var timing;
 
+function HttpClient() {}
+HttpClient.prototype.requestAsync = function(method, url, callback) {
+  var httpRequest = new XMLHttpRequest();
+
+  httpRequest.onreadystatechange = function() {
+    if (httpRequest.readyState == 4 && httpRequest.status == 200)
+      callback(httpRequest.responseText);
+  };
+
+  httpRequest.open(method, url);
+  httpRequest.send(null);
+};
+
+HttpClient.prototype.requestSync = function(method, url) {
+  var httpRequest = new XMLHttpRequest();
+
+  httpRequest.onreadystatechange = function() {
+    if (httpRequest.readyState == 4 && httpRequest.status == 200)
+      callback(httpRequest.responseText);
+  };
+
+  httpRequest.open(method, url, false);
+  httpRequest.send(null);
+};
+HttpClient.prototype.getAsync = function(url, callback) {
+  this.requestAsync('GET', url, callback)
+};
+// this.postSync = function(url, callback, data) {
+//   this.request('POST', url, callback, data);
+// };
+
+
 function toggleTabs(evt) {
   document.querySelectorAll('.tab-item').forEach(function(tab) {
     tab.classList.remove('is-active');
@@ -91,6 +123,13 @@ function initVerify() {
         text.innerHTML = 'Cannot verify token.';
 
         post('/verify-input', {inputValue: inputValue, isValid: isValid});
+        
+        var client = new HttpClient();
+        client.getAsync('/apple.h', function(response) {
+          // do something with response
+          console.log(response);
+        });
+
       });
 }
 
