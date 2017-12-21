@@ -6,28 +6,9 @@ var timing;
 
 function HttpClient() {}
 HttpClient.prototype.requestAsync = function(method, url, callback) {
-  var httpRequest = new XMLHttpRequest();
-
-  httpRequest.onreadystatechange = function() {
-    if (httpRequest.readyState == 4 && httpRequest.status == 200)
-      callback(httpRequest.responseText);
-  };
-
-  httpRequest.open(method, url);
-  httpRequest.send(null);
+  fetch(url, {method: method}).then((response) => callback(response));
 };
 
-HttpClient.prototype.requestSync = function(method, url) {
-  var httpRequest = new XMLHttpRequest();
-
-  httpRequest.onreadystatechange = function() {
-    if (httpRequest.readyState == 4 && httpRequest.status == 200)
-      callback(httpRequest.responseText);
-  };
-
-  httpRequest.open(method, url, false);
-  httpRequest.send(null);
-};
 HttpClient.prototype.getAsync = function(url, callback) {
   this.requestAsync('GET', url, callback)
 };
@@ -111,25 +92,35 @@ function initVerify() {
         var text = document.querySelector('.otp-verify-result .text');
         var icon = document.querySelector('.otp-verify-result .fa');
 
-        if (isValid) {
-          icon.classList.add('fa-check');
-          icon.classList.remove('fa-times');
-          text.innerHTML = 'Verified token';
-          return;
-        }
-
-        icon.classList.add('fa-times');
-        icon.classList.remove('fa-check');
-        text.innerHTML = 'Cannot verify token.';
-
         post('/verify-input', {inputValue: inputValue, isValid: isValid});
-        
-        var client = new HttpClient();
-        client.getAsync('/apple.h', function(response) {
-          // do something with response
-          console.log(response);
-        });
 
+        var client = new HttpClient();
+        client.getAsync('/verify-result', function(response) {
+          // do something with response
+          const reader = response.body.getReader();
+          reader.read().then(({done, value}) => {
+            // Is there no more data to read?
+            if (done) {
+              // Tell the browser that we have finished sending data
+              console.log('Done reading');
+              return;
+            }
+
+            // Get the data and send it to the browser via the controller
+            var string = new TextDecoder('utf-8').decode(value);
+            if (string == 'ok') {
+              // Valid key
+              icon.classList.add('fa-check');
+              icon.classList.remove('fa-times');
+              text.innerHTML = 'Verified token';
+            } else {
+              // Invalid key
+              icon.classList.add('fa-times');
+              icon.classList.remove('fa-check');
+              text.innerHTML = 'Cannot verify token.';
+            }
+          });
+        });
       });
 }
 

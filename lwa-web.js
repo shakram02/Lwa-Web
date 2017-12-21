@@ -28,10 +28,15 @@ const map = {
   '.doc': 'application/msword'
 };
 
+var RequestType =
+    Object.freeze({VerifyResult: 'verify-result', GetSecret: 'get-secret'});
+
+const validationUrlSet = new Set(['verify-result', 'get-secret']);
+
 var HtmlData = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
 
 const server = http.createServer((req, res) => {
-  
+
   if (req.method == 'GET') {
     serveGetRequest(req, res);
   } else if (req.method == 'POST') {
@@ -60,13 +65,15 @@ function serveGetRequest(req, res) {
 
   // based on the URL path, extract the file extension. e.g. .js, .doc, ...
   const fileName = path.parse(path.basename(parsedUrl.pathname));
-
+  console.log('filename:' + fileName.name);
   // Index page requested
   if (fileName.name.length == 0) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html');
     res.write(HtmlData);
     res.end();
+    return;
+  } else if (handleSpecialFunction(fileName.name, res)) {
     return;
   }
 
@@ -85,7 +92,7 @@ function serveGetRequest(req, res) {
 
 function servePostRequest(req, res) {
   var body = '';
-  
+
   req.on('data', function(data) {
     body += data;
   });
@@ -93,6 +100,21 @@ function servePostRequest(req, res) {
   req.on('end', function(data) {
     var parsedData = querystring.parse(body);
     console.log('isValid: ' + parsedData.isValid + '\n');
-    res.end();
+    res.end('the value was:' + isValid);
   });
+}
+
+function handleSpecialFunction(reqUrl, res) {
+  if (reqUrl == RequestType.GetSecret) {
+    console.log('YESS!!!!');
+  } else if (reqUrl == RequestType.VerifyResult) {
+    // TODO: verify here
+    res.write('ok');
+    console.log('res.body.va="asdb"!!!!');
+  } else {
+    return false;
+  }
+
+  res.end();
+  return true;
 }
