@@ -9,9 +9,9 @@ var path = require('path');
 const hostname = '127.0.0.1';
 const port = 3000;
 
-const secret = otpLib.authenticator.generateSecret();
-const token = otpLib.authenticator.generate(secret);
-const isValid = otpLib.authenticator.check(123456, secret);
+var secret = {};
+// const token = otpLib.authenticator.generate(secret);
+// const isValid = otpLib.authenticator.check(123456, secret);
 
 const map = {
   '.ico': 'image/x-icon',
@@ -97,7 +97,7 @@ function servePostRequest(req, res) {
 
   req.on('end', function(data) {
     var parsedData = JSON.parse(body);
-
+    
     if (otpLib.authenticator.check(parseInt(parsedData.inputValue), secret)) {
       res.end('ok');
     } else {
@@ -109,7 +109,9 @@ function servePostRequest(req, res) {
 
 function handleSpecialFunction(reqUrl, res) {
   if (reqUrl == RequestType.GetSecret) {
-    // TODO: create secret
+    // TODO: encrypt it, LOL!
+    secret = otpLib.authenticator.generateSecret()
+    res.end(secret);
   } else {
     return false;
   }

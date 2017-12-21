@@ -14,14 +14,7 @@ HttpClient.prototype.getAsync = function(url, callback) {
 HttpClient.prototype.postAsync = function(url, data, callback) {
   fetch(url, {method: 'POST', body: JSON.stringify(data)})
       .then((response) => callback(response));
-
-  // body : JSON.stringify({
-  // user : document.getElementById('user').value,
-  // ...
-  // })
 };
-
-
 
 function toggleTabs(evt) {
   document.querySelectorAll('.tab-item').forEach(function(tab) {
@@ -39,20 +32,27 @@ function toggleTabs(evt) {
 }
 
 function createSecret() {
-  secret = otplib.authenticator.generateSecret();
-  startCountdown();
+  client.getAsync('/get-secret', (response) => {
+    const reader = response.body.getReader();
+    reader.read().then(({done, value}) => {
+      var string = new TextDecoder('utf-8').decode(value);
+      console.log('SECRET:' + string);
+      secret = string;
+      startCountdown();
 
-  var otpauth = otplib.authenticator.keyuri('demo', 'otplib', secret);
+      var otpauth = otplib.authenticator.keyuri('demo', 'otplib', secret);
 
-  document.querySelector('.otp-secret').innerHTML = secret;
+      document.querySelector('.otp-secret').innerHTML = secret;
 
-  qrcodelib.toDataURL(otpauth, function(err, url) {
-    var container = document.querySelector('.otp-qrcode .qrcode');
-    if (err) {
-      container.innerHTML = 'Error generating QR Code';
-      return;
-    }
-    container.innerHTML = '<img src="' + url + '" alt="" />';
+      qrcodelib.toDataURL(otpauth, function(err, url) {
+        var container = document.querySelector('.otp-qrcode .qrcode');
+        if (err) {
+          container.innerHTML = 'Error generating QR Code';
+          return;
+        }
+        container.innerHTML = '<img src="' + url + '" alt="" />';
+      });
+    });
   });
 }
 
@@ -97,7 +97,6 @@ function initVerify() {
 
         var text = document.querySelector('.otp-verify-result .text');
         var icon = document.querySelector('.otp-verify-result .fa');
-
 
         client.postAsync(
             '/verify-input', {inputValue: inputValue}, function(response) {
