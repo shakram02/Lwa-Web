@@ -9,9 +9,9 @@ var path = require('path');
 const hostname = '127.0.0.1';
 const port = 3000;
 
-const secret = otpLib.authenticator.generateSecret();
-const token = otpLib.authenticator.generate(secret);
-const isValid = otpLib.authenticator.check(123456, secret);
+var secret = {};
+// const token = otpLib.authenticator.generate(secret);
+// const isValid = otpLib.authenticator.check(123456, secret);
 
 const map = {
   '.ico': 'image/x-icon',
@@ -28,10 +28,13 @@ const map = {
   '.doc': 'application/msword'
 };
 
+var RequestType =
+    Object.freeze({GetSecret: 'get-secret', CreateKey: 'get-key'});
+
 var HtmlData = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
 
 const server = http.createServer((req, res) => {
-  
+
   if (req.method == 'GET') {
     serveGetRequest(req, res);
   } else if (req.method == 'POST') {
@@ -60,13 +63,15 @@ function serveGetRequest(req, res) {
 
   // based on the URL path, extract the file extension. e.g. .js, .doc, ...
   const fileName = path.parse(path.basename(parsedUrl.pathname));
-
+  console.log('filename:' + fileName.name);
   // Index page requested
   if (fileName.name.length == 0) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html');
     res.write(HtmlData);
     res.end();
+    return;
+  } else if (handleSpecialFunction(fileName.name, res)) {
     return;
   }
 
@@ -85,14 +90,32 @@ function serveGetRequest(req, res) {
 
 function servePostRequest(req, res) {
   var body = '';
-  
+
   req.on('data', function(data) {
     body += data;
   });
 
   req.on('end', function(data) {
-    var parsedData = querystring.parse(body);
-    console.log('isValid: ' + parsedData.isValid + '\n');
-    res.end();
+    var parsedData = JSON.parse(body);
+    
+    if (otpLib.authenticator.check(parseInt(parsedData.inputValue), secret)) {
+      res.end('ok');
+    } else {
+      res.end('invalid');
+    }
+
   });
+}
+
+function handleSpecialFunction(reqUrl, res) {
+  if (reqUrl == RequestType.GetSecret) {
+    // TODO: encrypt it, LOL!
+    secret = otpLib.authenticator.generateSecret()
+    res.end(secret);
+  } else {
+    return false;
+  }
+
+  res.end();
+  return true;
 }

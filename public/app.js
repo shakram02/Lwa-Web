@@ -3,6 +3,18 @@
 var secret = '';
 var step = 30;
 var timing;
+const client = new HttpClient();
+
+function HttpClient() {}
+
+HttpClient.prototype.getAsync = function(url, callback) {
+  fetch(url, {method: 'GET'}).then((response) => callback(response));
+};
+
+HttpClient.prototype.postAsync = function(url, data, callback) {
+  fetch(url, {method: 'POST', body: JSON.stringify(data)})
+      .then((response) => callback(response));
+};
 
 function toggleTabs(evt) {
   document.querySelectorAll('.tab-item').forEach(function(tab) {
@@ -20,20 +32,27 @@ function toggleTabs(evt) {
 }
 
 function createSecret() {
-  secret = otplib.authenticator.generateSecret();
-  startCountdown();
+  client.getAsync('/get-secret', (response) => {
+    const reader = response.body.getReader();
+    reader.read().then(({done, value}) => {
+      var string = new TextDecoder('utf-8').decode(value);
+      console.log('SECRET:' + string);
+      secret = string;
+      startCountdown();
 
-  var otpauth = otplib.authenticator.keyuri('demo', 'otplib', secret);
+      var otpauth = otplib.authenticator.keyuri('demo', 'otplib', secret);
 
-  document.querySelector('.otp-secret').innerHTML = secret;
+      document.querySelector('.otp-secret').innerHTML = secret;
 
-  qrcodelib.toDataURL(otpauth, function(err, url) {
-    var container = document.querySelector('.otp-qrcode .qrcode');
-    if (err) {
-      container.innerHTML = 'Error generating QR Code';
-      return;
-    }
-    container.innerHTML = '<img src="' + url + '" alt="" />';
+      qrcodelib.toDataURL(otpauth, function(err, url) {
+        var container = document.querySelector('.otp-qrcode .qrcode');
+        if (err) {
+          container.innerHTML = 'Error generating QR Code';
+          return;
+        }
+        container.innerHTML = '<img src="' + url + '" alt="" />';
+      });
+    });
   });
 }
 
@@ -79,46 +98,31 @@ function initVerify() {
         var text = document.querySelector('.otp-verify-result .text');
         var icon = document.querySelector('.otp-verify-result .fa');
 
-        if (isValid) {
-          icon.classList.add('fa-check');
-          icon.classList.remove('fa-times');
-          text.innerHTML = 'Verified token';
-          return;
-        }
+        client.postAsync(
+            '/verify-input', {inputValue: inputValue}, function(response) {
+              const reader = response.body.getReader();
+              reader.read().then(({done, value}) => {
+                // Is there no more data to read?
+                if (done) {
+                  return;
+                }
 
-        icon.classList.add('fa-times');
-        icon.classList.remove('fa-check');
-        text.innerHTML = 'Cannot verify token.';
-
-        post('/verify-input', {inputValue: inputValue, isValid: isValid});
+                var string = new TextDecoder('utf-8').decode(value);
+                console.log('Post RESPONSE:' + string);
+                if (string == 'ok') {
+                  // Valid key
+                  icon.classList.add('fa-check');
+                  icon.classList.remove('fa-times');
+                  text.innerHTML = 'Verified token';
+                } else {
+                  // Invalid key
+                  icon.classList.add('fa-times');
+                  icon.classList.remove('fa-check');
+                  text.innerHTML = 'Cannot verify token.';
+                }
+              })
+            });
       });
-}
-
-function post(path, params) {
-  method = 'post';  // Set method to post by default if not specified.
-
-  // The rest of this code assumes you are not using a library.
-  // It can be made less wordy if you use one.
-  var form = document.createElement('form');
-  form.setAttribute('method', method);
-  form.setAttribute('action', path);
-  form.setAttribute('target', '/#');  // Create a new page, don't redirect
-
-  for (var key in params) {
-    if (!params.hasOwnProperty(key)) {
-      continue;
-    }
-
-    var hiddenField = document.createElement('input');
-    hiddenField.setAttribute('type', 'hidden');
-    hiddenField.setAttribute('name', key);
-    hiddenField.setAttribute('value', params[key]);
-
-    form.appendChild(hiddenField);
-  }
-
-  document.body.appendChild(form);
-  form.submit();
 }
 
 window.addEventListener('load', function() {
