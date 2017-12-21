@@ -12,7 +12,7 @@ HttpClient.prototype.getAsync = function(url, callback) {
 };
 
 HttpClient.prototype.postAsync = function(url, data, callback) {
-  fetch(url, {method: 'POST', body: data})
+  fetch(url, {method: 'POST', body: JSON.stringify(data)})
       .then((response) => callback(response));
 
   // body : JSON.stringify({
@@ -99,29 +99,30 @@ function initVerify() {
         var icon = document.querySelector('.otp-verify-result .fa');
 
 
-        client.postAsync('/verify-input', inputValue, function(response) {
-          const reader = response.body.getReader();
-          reader.read().then(({done, value}) => {
-            // Is there no more data to read?
-            if (done) {
-              return;
-            }
+        client.postAsync(
+            '/verify-input', {inputValue: inputValue}, function(response) {
+              const reader = response.body.getReader();
+              reader.read().then(({done, value}) => {
+                // Is there no more data to read?
+                if (done) {
+                  return;
+                }
 
-            var string = new TextDecoder('utf-8').decode(value);
-            console.log('Post RESPONSE:' + string);
-            if (string == 'ok') {
-              // Valid key
-              icon.classList.add('fa-check');
-              icon.classList.remove('fa-times');
-              text.innerHTML = 'Verified token';
-            } else {
-              // Invalid key
-              icon.classList.add('fa-times');
-              icon.classList.remove('fa-check');
-              text.innerHTML = 'Cannot verify token.';
-            }
-          })
-        });
+                var string = new TextDecoder('utf-8').decode(value);
+                console.log('Post RESPONSE:' + string);
+                if (string == 'ok') {
+                  // Valid key
+                  icon.classList.add('fa-check');
+                  icon.classList.remove('fa-times');
+                  text.innerHTML = 'Verified token';
+                } else {
+                  // Invalid key
+                  icon.classList.add('fa-times');
+                  icon.classList.remove('fa-check');
+                  text.innerHTML = 'Cannot verify token.';
+                }
+              })
+            });
       });
 }
 
