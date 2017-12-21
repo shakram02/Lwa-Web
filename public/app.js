@@ -3,18 +3,24 @@
 var secret = '';
 var step = 30;
 var timing;
+const client = new HttpClient();
 
 function HttpClient() {}
-HttpClient.prototype.requestAsync = function(method, url, callback) {
-  fetch(url, {method: method}).then((response) => callback(response));
-};
 
 HttpClient.prototype.getAsync = function(url, callback) {
-  this.requestAsync('GET', url, callback)
+  fetch(url, {method: 'GET'}).then((response) => callback(response));
 };
-// this.postSync = function(url, callback, data) {
-//   this.request('POST', url, callback, data);
-// };
+
+HttpClient.prototype.postAsync = function(url, data, callback) {
+  fetch(url, {method: 'POST', body: data})
+      .then((response) => callback(response));
+
+  // body : JSON.stringify({
+  // user : document.getElementById('user').value,
+  // ...
+  // })
+};
+
 
 
 function toggleTabs(evt) {
@@ -92,22 +98,17 @@ function initVerify() {
         var text = document.querySelector('.otp-verify-result .text');
         var icon = document.querySelector('.otp-verify-result .fa');
 
-        post('/verify-input', {inputValue: inputValue, isValid: isValid});
 
-        var client = new HttpClient();
-        client.getAsync('/verify-result', function(response) {
-          // do something with response
+        client.postAsync('/verify-input', inputValue, function(response) {
           const reader = response.body.getReader();
           reader.read().then(({done, value}) => {
             // Is there no more data to read?
             if (done) {
-              // Tell the browser that we have finished sending data
-              console.log('Done reading');
               return;
             }
 
-            // Get the data and send it to the browser via the controller
             var string = new TextDecoder('utf-8').decode(value);
+            console.log('Post RESPONSE:' + string);
             if (string == 'ok') {
               // Valid key
               icon.classList.add('fa-check');
@@ -119,36 +120,9 @@ function initVerify() {
               icon.classList.remove('fa-check');
               text.innerHTML = 'Cannot verify token.';
             }
-          });
+          })
         });
       });
-}
-
-function post(path, params) {
-  method = 'post';  // Set method to post by default if not specified.
-
-  // The rest of this code assumes you are not using a library.
-  // It can be made less wordy if you use one.
-  var form = document.createElement('form');
-  form.setAttribute('method', method);
-  form.setAttribute('action', path);
-  form.setAttribute('target', '/#');  // Create a new page, don't redirect
-
-  for (var key in params) {
-    if (!params.hasOwnProperty(key)) {
-      continue;
-    }
-
-    var hiddenField = document.createElement('input');
-    hiddenField.setAttribute('type', 'hidden');
-    hiddenField.setAttribute('name', key);
-    hiddenField.setAttribute('value', params[key]);
-
-    form.appendChild(hiddenField);
-  }
-
-  document.body.appendChild(form);
-  form.submit();
 }
 
 window.addEventListener('load', function() {
