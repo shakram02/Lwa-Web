@@ -29,9 +29,7 @@ const map = {
 };
 
 var RequestType =
-    Object.freeze({VerifyResult: 'verify-result', GetSecret: 'get-secret'});
-
-const validationUrlSet = new Set(['verify-result', 'get-secret']);
+    Object.freeze({GetSecret: 'get-secret', CreateKey: 'get-key'});
 
 var HtmlData = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
 
@@ -98,19 +96,21 @@ function servePostRequest(req, res) {
   });
 
   req.on('end', function(data) {
-    var parsedData = querystring.parse(body);
-    console.log('isValid: ' + parsedData.isValid + '\n');
-    res.end('the value was:' + isValid);
+    // var parsedData = querystring.parse(body);  // Parse post request
+    // console.log(parsedData);
+
+    if (otpLib.authenticator.check(parseInt(data), secret)) {
+      res.end('ok');
+    } else {
+      res.end('invalid');
+    }
+
   });
 }
 
 function handleSpecialFunction(reqUrl, res) {
   if (reqUrl == RequestType.GetSecret) {
-    console.log('YESS!!!!');
-  } else if (reqUrl == RequestType.VerifyResult) {
-    // TODO: verify here
-    res.write('ok');
-    console.log('res.body.va="asdb"!!!!');
+    // TODO: create secret
   } else {
     return false;
   }
