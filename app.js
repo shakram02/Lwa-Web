@@ -31,6 +31,22 @@ var HtmlData = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
 const server = http.createServer((req, res) => {
   if (req.method == 'GET') {
     serveGetRequest(req, res);
+  } else {
+    // FIXME: validation result is sent in the URL as I couldn't add it to
+    // content and don't know how to parse it here
+    var result = req.url.replace('/', '');
+
+    if (result === 'true') {
+      console.log('Validation OK');
+    } else {
+      console.error('Validation failed');
+    }
+    // var output = [];
+    // for (var property in req) {
+    //   console.log(property);
+    //   console.log(req[property]);
+    //   console.log();
+    // }
   }
 });
 
@@ -55,7 +71,6 @@ function serveGetRequest(req, res) {
 
   // Index page requested
   if (fileName.name.length == 0) {
-    console.log('name:' + fileName.name);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html');
     res.write(HtmlData);
@@ -69,10 +84,8 @@ function serveGetRequest(req, res) {
     res.setHeader('Content-Type', parseContentType(fileName.base));
     res.write(data);
     res.end();
-    console.log('Served:' + fileName.base);
-
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     res.statusCode = 404;
     res.end(`File ${pathname} not found!`);
   }
