@@ -1,6 +1,8 @@
 const http = require('http');
 const url = require('url');
 const otpLib = require('otplib');
+const querystring = require('querystring');
+
 var fs = require('fs');
 var path = require('path');
 
@@ -29,24 +31,14 @@ const map = {
 var HtmlData = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
 
 const server = http.createServer((req, res) => {
+  
   if (req.method == 'GET') {
     serveGetRequest(req, res);
+  } else if (req.method == 'POST') {
+    servePostRequest(req, res);
   } else {
-    // FIXME: validation result is sent in the URL as I couldn't add it to
-    // content and don't know how to parse it here
-    var result = req.url.replace('/', '');
-
-    if (result === 'true') {
-      console.log('Validation OK');
-    } else {
-      console.error('Validation failed');
-    }
-    // var output = [];
-    // for (var property in req) {
-    //   console.log(property);
-    //   console.log(req[property]);
-    //   console.log();
-    // }
+    res.statusCode = 404;
+    res.end();
   }
 });
 
@@ -89,4 +81,18 @@ function serveGetRequest(req, res) {
     res.statusCode = 404;
     res.end(`File ${pathname} not found!`);
   }
+}
+
+function servePostRequest(req, res) {
+  var body = '';
+  
+  req.on('data', function(data) {
+    body += data;
+  });
+
+  req.on('end', function(data) {
+    var parsedData = querystring.parse(body);
+    console.log('isValid: ' + parsedData.isValid + '\n');
+    res.end();
+  });
 }
