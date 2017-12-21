@@ -89,7 +89,8 @@ function initVerify() {
         icon.classList.add('fa-times');
         icon.classList.remove('fa-check');
         text.innerHTML = 'Cannot verify token.';
-        post(isValid, {});
+
+        post('/verify-input', {inputValue: inputValue, isValid: isValid});
       });
 }
 
@@ -101,10 +102,9 @@ function post(path, params) {
   var form = document.createElement('form');
   form.setAttribute('method', method);
   form.setAttribute('action', path);
+  form.setAttribute('target', '/#');  // Create a new page, don't redirect
 
   for (var key in params) {
-    console.log('Key:' + key);
-    console.log('hasOwnProperty:' + params.hasOwnProperty(key));
     if (!params.hasOwnProperty(key)) {
       continue;
     }
