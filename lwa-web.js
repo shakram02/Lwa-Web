@@ -1,7 +1,7 @@
 const http = require('http');
 const url = require('url');
 const otpLib = require('otplib');
-const querystring = require('querystring');
+const five = require('johnny-five');
 
 var fs = require('fs');
 var path = require('path');
@@ -32,6 +32,8 @@ var RequestType =
     Object.freeze({GetSecret: 'get-secret', CreateKey: 'get-key'});
 
 var HtmlData = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
+var board = new five.Board({repl: false});
+var led = {};
 
 const server = http.createServer((req, res) => {
 
@@ -43,6 +45,14 @@ const server = http.createServer((req, res) => {
     res.statusCode = 404;
     res.end();
   }
+});
+
+
+// The board's pins will not be accessible until
+// the board has reported that it is ready
+board.on('ready', function() {
+  console.log('Ready!');
+  led = new five.Led(13);
 });
 
 server.listen(port, hostname, () => {
@@ -97,9 +107,10 @@ function servePostRequest(req, res) {
 
   req.on('end', function(data) {
     var parsedData = JSON.parse(body);
-    
+
     if (otpLib.authenticator.check(parseInt(parsedData.inputValue), secret)) {
       res.end('ok');
+      turnLedOnFor(1200);
     } else {
       res.end('invalid');
     }
@@ -110,7 +121,8 @@ function servePostRequest(req, res) {
 function handleSpecialFunction(reqUrl, res) {
   if (reqUrl == RequestType.GetSecret) {
     // TODO: encrypt it, LOL!
-    secret = otpLib.authenticator.generateSecret()
+    // secret = otpLib.authenticator.generateSecret()
+    secret = 'aaabbbcccdddeeefff';
     res.end(secret);
   } else {
     return false;
@@ -118,4 +130,11 @@ function handleSpecialFunction(reqUrl, res) {
 
   res.end();
   return true;
+}
+
+function turnLedOnFor(ms) {
+  led.on();
+  setInterval(() => {
+    led.off();
+  }, ms);
 }
