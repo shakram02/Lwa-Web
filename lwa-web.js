@@ -96,10 +96,9 @@ function servePostRequest(req, res) {
   });
 
   req.on('end', function(data) {
-    // var parsedData = querystring.parse(body);  // Parse post request
-    // console.log(parsedData);
+    var parsedData = JSON.parse(body);
 
-    if (otpLib.authenticator.check(parseInt(data), secret)) {
+    if (otpLib.authenticator.check(parseInt(parsedData.inputValue), secret)) {
       res.end('ok');
     } else {
       res.end('invalid');
