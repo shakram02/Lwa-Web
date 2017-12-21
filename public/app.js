@@ -73,8 +73,8 @@ function initVerify() {
   document.querySelector('.otp-verify-send')
       .addEventListener('click', function() {
         var inputValue = document.querySelector('.otp-verify-input').value;
-        var isValid = otplib.authenticator.check(
-            inputValue, secret);  // TODO: move this to server
+        // TODO: move OTP check to server
+        var isValid = otplib.authenticator.check(inputValue, secret);
 
         var text = document.querySelector('.otp-verify-result .text');
         var icon = document.querySelector('.otp-verify-result .fa');
@@ -89,7 +89,36 @@ function initVerify() {
         icon.classList.add('fa-times');
         icon.classList.remove('fa-check');
         text.innerHTML = 'Cannot verify token.';
+        post(isValid, {});
       });
+}
+
+function post(path, params) {
+  method = 'post';  // Set method to post by default if not specified.
+
+  // The rest of this code assumes you are not using a library.
+  // It can be made less wordy if you use one.
+  var form = document.createElement('form');
+  form.setAttribute('method', method);
+  form.setAttribute('action', path);
+
+  for (var key in params) {
+    console.log('Key:' + key);
+    console.log('hasOwnProperty:' + params.hasOwnProperty(key));
+    if (!params.hasOwnProperty(key)) {
+      continue;
+    }
+
+    var hiddenField = document.createElement('input');
+    hiddenField.setAttribute('type', 'hidden');
+    hiddenField.setAttribute('name', key);
+    hiddenField.setAttribute('value', params[key]);
+
+    form.appendChild(hiddenField);
+  }
+
+  document.body.appendChild(form);
+  form.submit();
 }
 
 window.addEventListener('load', function() {
