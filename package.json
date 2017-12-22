@@ -11,7 +11,7 @@
     "otp"
   ],
   "author": "Ahmed Hamdy",
-  "license": "MIT",
+  "license": "Apache",
   "dependencies": {
     "otplib": "^7.0.0"
   }

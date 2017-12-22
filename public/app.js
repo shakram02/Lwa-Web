@@ -37,9 +37,8 @@ function createSecret() {
     reader.read().then(({done, value}) => {
       var string = new TextDecoder('utf-8').decode(value);
       console.log('SECRET:' + string);
-      secret = string;
-      startCountdown();
 
+      secret = string;
       var otpauth = otplib.authenticator.keyuri('demo', 'otplib', secret);
 
       document.querySelector('.otp-secret').innerHTML = secret;
@@ -54,38 +53,6 @@ function createSecret() {
       });
     });
   });
-}
-
-function setToken(token) {
-  document.querySelector('.otp-token').innerHTML = token;
-}
-
-function setTimeLeft(timeLeft) {
-  document.querySelector('.otp-countdown').innerHTML = timeLeft + 's';
-}
-
-function generator() {
-  if (!secret) {
-    window.clearInterval(timing);
-    return;
-  }
-
-  const epoch = Math.floor(new Date().getTime() / 1000);
-  const count = epoch % 30;
-
-  if (count === 0) {
-    setToken(otplib.authenticator.generate(secret));
-  }
-  setTimeLeft(step - count);
-}
-
-function startCountdown() {
-  window.setTimeout(() => {
-    if (secret) {
-      setToken(otplib.authenticator.generate(secret));
-    }
-    timing = window.setInterval(generator, 1000);
-  }, 2000);
 }
 
 function initVerify() {
