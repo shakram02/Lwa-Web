@@ -129,8 +129,7 @@ function servePostRequest(req, res) {
 function handleSpecialFunction(reqUrl, res) {
   if (reqUrl == RequestType.GetSecret) {
     // TODO: encrypt it, LOL!
-    // secret = otpLib.authenticator.generateSecret()
-    secret = 'aaabbbcccdddeeefff';
+    secret = otpLib.authenticator.generateSecret()
     res.end(secret);
   } else {
     return false;
