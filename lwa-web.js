@@ -32,8 +32,14 @@ var RequestType =
     Object.freeze({GetSecret: 'get-secret', CreateKey: 'get-key'});
 
 var HtmlData = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
+
 var board = new five.Board({repl: false});
-var led = {};
+const RED_LED_PIN = 10;
+const GREEN_LED_PIN = 8;
+const LED_ON_INTERVAL_MS = 1200;
+
+var redLed = undefined;
+var greenLed = undefined;
 
 const server = http.createServer((req, res) => {
 
@@ -52,7 +58,8 @@ const server = http.createServer((req, res) => {
 // the board has reported that it is ready
 board.on('ready', function() {
   console.log('Ready!');
-  led = new five.Led(13);
+  redLed = new five.Led(RED_LED_PIN);
+  greenLed = new five.Led(GREEN_LED_PIN);
 });
 
 server.listen(port, hostname, () => {
@@ -73,7 +80,7 @@ function serveGetRequest(req, res) {
 
   // based on the URL path, extract the file extension. e.g. .js, .doc, ...
   const fileName = path.parse(path.basename(parsedUrl.pathname));
-  console.log('filename:' + fileName.name);
+
   // Index page requested
   if (fileName.name.length == 0) {
     res.statusCode = 200;
@@ -109,9 +116,10 @@ function servePostRequest(req, res) {
     var parsedData = JSON.parse(body);
 
     if (otpLib.authenticator.check(parseInt(parsedData.inputValue), secret)) {
+      turnLedOnFor(greenLed, LED_ON_INTERVAL_MS);
       res.end('ok');
-      turnLedOnFor(1200);
     } else {
+      turnLedOnFor(redLed, LED_ON_INTERVAL_MS);
       res.end('invalid');
     }
 
@@ -132,7 +140,12 @@ function handleSpecialFunction(reqUrl, res) {
   return true;
 }
 
-function turnLedOnFor(ms) {
+function turnLedOnFor(led, ms) {
+  if (led == undefined) {
+    console.error('LED isn\'t initialized');
+    return;
+  }
+
   led.on();
   setInterval(() => {
     led.off();

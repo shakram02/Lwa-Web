@@ -59,7 +59,6 @@ function initVerify() {
   document.querySelector('.otp-verify-send')
       .addEventListener('click', function() {
         var inputValue = document.querySelector('.otp-verify-input').value;
-        // TODO: move OTP check to server
         var isValid = otplib.authenticator.check(inputValue, secret);
 
         var text = document.querySelector('.otp-verify-result .text');
