@@ -1,7 +1,11 @@
 # Lwa-Web
-Website for Lwa (Lock with Authenticator). A web portal for the product that undoubtedly crushes Amazon Key. [Demo video](https://youtu.be/8U2EYIBWeYw)
+Website for Lwa (Lock with Authenticator). Prototypical Amazon Key-ish thingy. 
 
-This is a *fun project* and **production considerations weren't put in mind.**
+:point_down::point_down::point_down:
+
+:boom::boom: **[Demo video](https://youtu.be/8U2EYIBWeYw)** :boom::boom:
+
+This is a *fun project* and **production considerations weren't put in mind.** 
 
 Lwa is simply an One Time Password (OTP) controlled embedded system actuator, think like getting a ticket to enter the roller coaster, you use the ticket only once, and it's valid for a limited amount of time.
 
@@ -29,5 +33,3 @@ Only you have the secret token that's used to generate OTP keys. You generate th
 
 - [@yeojz](https://github.com/yeojz) for OTPlib [OTP](https://github.com/yeojz/otplib)
 - [@rwaldron](https://github.com/rwaldron) for Jhonny-Five [High five](https://github.com/rwaldron/johnny-five)
-
- I made sure to use the least possible amount of libraries and dependencies. The code design isn't super cool, but yea it works and since it's just a fun project (that uses lots of `js` :poop:) I guess life is good.
